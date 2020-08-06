@@ -1,0 +1,86 @@
+var dir1 = "";
+var t2 = "";
+var dir2 = "";
+var dir3 = "";
+
+macro "Run macro [1]"
+{
+	waitForUser("open nkx2.2a image");
+
+	//makes projection of an entire stack, change projection type at "projection="
+	run("Z Project...", "start=1 stop=100 projection=[Max Intensity]");
+	
+	//subtract background, rolling ball, change size at "rolling="
+	run("Subtract Background...", "rolling=2");
+	//run("Watershed");
+
+	//get individual image statistics
+	getRawStatistics(area, mean, min, max, std);
+	
+	//set threshold based on image statistics, can only go by whole std dev
+	setThreshold(mean + std + std, 4012);
+	
+	//create mask based on threshold
+	run("Create Mask");
+
+	//run watershed algorithm 
+	run("Watershed");
+
+	//waitForUser("save thresholded image");
+
+	waitForUser("open olig2 image");
+
+	//z projection of image 2
+	run("Z Project...", "start=1 stop=100 projection=[Max Intensity]");
+	
+	//open ROI manager
+	run("ROI Manager...");
+
+	//manually draw ROI and add to image 2
+	waitForUser("draw ROI");
+	roiManager("Add");
+
+	waitForUser("measure olig2 ROI")
+	waitForUser("open mask image");
+
+	//to be certain you're measuring ALL ROIs
+	roiManager("Select", 0);
+
+	//setOption("Show All",true);
+
+	//particle analyzer, change size at "size=" and circularity at "circularity="
+	run("Analyze Particles...", "size=0.0.5-Infinity circularity=0.00-1.00 show=Nothing clear add");
+
+	//waitForUser("save prepuncta");
+
+	waitForUser("open nkx2.2a image");
+
+	//create max intensity z projection
+	run("Z Project...", "start=1 stop=100 projection=[Max Intensity]");
+
+	//background subtraction, rolling ball, radius = 2
+	run("Subtract Background...", "rolling=2");
+
+	//run("Watershed");
+	setOption("Show All",true);
+
+	waitForUser("save MAX");
+
+	waitForUser("measure puncta");
+
+	waitForUser("save your puncta");
+
+	run("Close");
+
+	roiManager("Delete");
+	run("Close");
+}
+
+macro "Close All Windows [2]" 
+{ 
+      while (nImages>0) {
+          selectImage(nImages);
+          close(); 
+      } 
+} 
+      
